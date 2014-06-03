@@ -9,6 +9,9 @@ import org.wiperdog.bundleextractor.BundleExtractor
 import org.osgi.framework.ServiceReference
 import org.osgi.util.tracker.ServiceTracker
 import org.osgi.util.tracker.ServiceTrackerCustomizer
+import java.text.SimpleDateFormat;
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 class JobRunOneShot{
 	def properties = MonitorJobConfigLoader.getProperties()
@@ -44,6 +47,10 @@ class JobRunOneShot{
 		}
 		def jobRunnerMain
 		jobResult = null
+		def timeout = 60000 
+		def expirationTime = System.currentTimeMillis() + timeout
+		def currentTime = System.currentTimeMillis()
+		def startRunJobTime = System.currentTimeMillis()
 		while(jobRunnerMain == null ) {
 			jobRunnerMain = ctx.getService(ctx.getServiceReference("JobRunnerMainService"))	
 			if(jobRunnerMain != null ) {
@@ -52,12 +59,28 @@ class JobRunOneShot{
 			}
 		}
 		//Set timeout to waiting for job result in 60s
-		def timeout = 60000 
-		def expirationTime = System.currentTimeMillis() + timeout
-		def currentTime = System.currentTimeMillis()
 		while(jobResult == null && currentTime < expirationTime) {
 			currentTime = System.currentTimeMillis()
 			Thread.sleep(1000)
+		}
+		StringBuilder logStr = new StringBuilder()
+		if(jobResult == null ) {
+			//Get log message from wiperdog/log
+			def logFile = new File(System.getProperty("felix.home") + File.separator + "log" + File.separator + "wiperdog.log")
+			Pattern pattern = Pattern.compile("\\[\\d{4}\\/\\d{2}\\/\\d{2}\\s\\d{2}:\\d{2}:\\d{2}.\\d{3}\\]");
+			SimpleDateFormat sf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss.SSS")
+			logFile.eachLine{ line->
+				Matcher matcher = pattern.matcher(line);
+				if (matcher.find()) {
+					def logTime = matcher[0].replace("[","").replace("]","")
+					def logTimeInMilis = sf.parse(logTime).getTime()
+					if( ( logTimeInMilis >= startRunJobTime ) &&  ( logTimeInMilis <= expirationTime ) ) {
+						logStr.append(line + "\n")
+					}					
+				}
+			}
+			jobResult = "------LOG ERROR------: \n"
+			jobResult += logStr
 		}
 		return jobResult
 	}
