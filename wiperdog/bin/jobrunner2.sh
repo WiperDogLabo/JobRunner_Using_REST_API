@@ -11,6 +11,11 @@ fi
 export PREFIX=`cd "$dir/.." && pwd`
 cd "$PREFIX"/bin
 
+wiperdog_status=$(lsof -wni tcp:8089)
+if [ "$wiperdog_status" == "" ];then
+	echo "Wiperdog not running, please start wiperdog before run jobrunner!"
+	exit
+fi
 if [[ "$#" -eq 2  && "$1" == "-f" ]]; then
 	if [ -f $2 ] ;then
 		data="{\"job\":\"$2\"}"
