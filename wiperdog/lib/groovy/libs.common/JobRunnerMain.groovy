@@ -35,7 +35,9 @@ public class JobRunnerMain implements JobRunnerMainService{
 			def dest = '[[http:"http://localhost:8089/runjob/data"]]'
 			
 			def jobText = jobFile.getText().replaceAll("\nDEST.*=.*","\nDEST=${dest}")
-
+			if(!jobText.contains("\nDEST")) {
+				jobText+="\nDEST=${dest}"
+			}
 			def tmpJobFile = new File(System.getProperty("felix.home") + File.separator + "tmp" + File.separator + jobFile.getName())
 			if(!tmpJobFile.exists()) {
 				tmpJobFile.createNewFile()
