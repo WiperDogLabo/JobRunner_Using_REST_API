@@ -16,9 +16,19 @@ if [ "$wiperdog_status" == "" ];then
 	echo "Wiperdog not running, please start wiperdog before run jobrunner!"
 	exit
 fi
+
 if [[ "$#" -eq 2  && "$1" == "-f" ]]; then
-	if [ -f $2 ] ;then
-		data="{\"job\":\"$2\"}"
+	jobFile=$2
+	if [[ ! "$jobFile" = /* ]];then
+		if [[ ! "$jobFile" = */* ]];then
+			jobFile=$PREFIX/var/job/$jobFile
+		else
+			jobFile=$PREFIX/$jobFile
+		fi
+	fi
+		
+	if [ -f $jobFile ] ;then
+		data="{\"job\":\"$jobFile\"}"
 		echo "Running..."
 		content=$(curl -s -X POST localhost:8089/runjob -H "Content-type: application/json" -d $data )
 		echo "Finished !"
@@ -31,7 +41,11 @@ if [[ "$#" -eq 2  && "$1" == "-f" ]]; then
 			echo "Error occurred ! Please check wiperdog log or console output !"
 		fi
 	else
-		echo "Job file does not exists ! : $2 "
+		if [ -d $jobFile ];then
+			echo "Input is not a file : $jobFile" 
+		else
+			echo "Job file does not exists ! : $jobFile "
+		fi
 	fi
 else
 	 echo           Incorrect parameters!
