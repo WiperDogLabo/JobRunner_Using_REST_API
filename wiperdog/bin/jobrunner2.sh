@@ -35,9 +35,9 @@ if [[ "$#" -eq 2  && "$1" == "-f" ]]; then
 		if [ "$content" != "" ] ;then
 			echo "------------------------"
 			echo "Job result: "
-			echo -e $content | sed 's/\\//g'
+			echo -e $content | sed 's/\\n/\n/g' | sed 's/\\//g'
 		else
-			echo -e $content | sed 's/\\//g'
+			echo -e $content | sed 's/\\/\/g'
 			echo "Error occurred ! Please check wiperdog log or console output !"
 		fi
 	else
