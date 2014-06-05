@@ -63,8 +63,10 @@ class JobRunOneShot{
 			currentTime = System.currentTimeMillis()
 			Thread.sleep(1000)
 		}
-		StringBuilder logStr = new StringBuilder()
+		def returnData = [:]
+
 		if(jobResult == null ) {
+			StringBuilder logStr = new StringBuilder()
 			//Get log message from wiperdog/log
 			def logFile = new File(System.getProperty("felix.home") + File.separator + "log" + File.separator + "wiperdog.log")
 			Pattern pattern = Pattern.compile("\\[\\d{4}\\/\\d{2}\\/\\d{2}\\s\\d{2}:\\d{2}:\\d{2}.\\d{3}\\]");
@@ -79,10 +81,11 @@ class JobRunOneShot{
 					}					
 				}
 			}
-			jobResult = "------LOG ERROR------: \n"
-			jobResult += logStr
+			returnData["log"] = logStr.toString()
+		} else {
+			returnData["data"] = jobResult
 		}
-		return jobResult
+		return new JsonBuilder(returnData).toPrettyString()
 	}
 	public String update(Request request, Response response){
 
